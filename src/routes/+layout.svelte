@@ -28,13 +28,31 @@
   let palette: "dark" | "light" = "light";
   let i = "fill-black stroke-0.5 w-auto h-10";
   let logo: HTMLAnchorElement;
-  const bganim = () => {
-    requestAnimationFrame(()=>{
-      console.log(Math.random() * 100)
-    })
+  let frameCount = 0; // Variable to keep track of the frame count
+  let then = 0;
+const bganim = () => {
+  const now = Date.now();
+  const deltaTime = (now - then) / 1000; // Calculate time difference in seconds
+  const interval = 0.5; // Interval between animations in seconds (change this if needed)
+
+  // Check if the time interval for the animation has passed (every 10th frame)
+  if (deltaTime >= interval && frameCount % 500 === 0) {
+    gsap.to("html", { "--v1n": Math.floor(Math.random() * 100), duration: 5, ease: "power1.out" });
+    gsap.to("html", { "--v2n": Math.floor(Math.random() * 100), duration: 5, ease: "power1.out" });
+    gsap.to("html", { "--v3n": Math.floor(Math.random() * 100), duration: 5, ease: "power1.out" });
+    then = now; // Reset the timer for the next animation
   }
-  onMount(() => {
-    window
+
+  frameCount++; // Increment the frame count
+
+  // Request the next animation frame
+  requestAnimationFrame(bganim);
+};
+
+onMount(() => {
+  then = Date.now(); // Initialize 'then' with the current timestamp
+  bganim();
+  window
     .matchMedia("(prefers-color-scheme: dark)")
     .addEventListener("change", (e) => {
       e.matches ? (palette = "dark") : "light";
@@ -88,12 +106,17 @@
   :global(html) {
     @apply text-slate-900 dark:text-white;
     background-color:hsla(0,100%,50%,1);
-    --v1: calc(var(--v1n) * 1%)
+    --v1n: 0;
+    --v2n: 0;
+    --v3n: 0;
+    --v1: calc(var(--v1n) * 1%);
+    --v2: calc(var(--v2n) * 1%);
+    --v3: calc(var(--v3n) * 1%);
     background-image:
     radial-gradient(at 35% 23%, hsla(28,100%,74%,1) 0px, transparent 50%),
     radial-gradient(at 80% 0%, hsla(189,100%,56%,1) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, hsla(355,100%,93%,1) 0px, transparent 50%),
-    radial-gradient(at 80% 50%, hsla(340,100%,76%,1) 0px, transparent 50%),
+    radial-gradient(at 0% var(--v1), hsla(355,100%,93%,1) 0px, transparent 50%),
+    radial-gradient(at 80% var(--v2), hsla(340,100%,76%,1) 0px, transparent 50%),
     radial-gradient(at 0% 100%, hsla(22,100%,77%,1) 0px, transparent 50%),
     radial-gradient(at 80% 100%, hsla(242,100%,70%,1) 0px, transparent 50%),
     radial-gradient(at 0% 0%, hsla(343,100%,76%,1) 0px, transparent 50%);
