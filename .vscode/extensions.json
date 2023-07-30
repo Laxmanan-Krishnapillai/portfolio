@@ -1,5 +1,9 @@
 {
-  "recommendations": ["usernamehw.errorlens", "svelte.svelte-vscode"],
+  "recommendations": [
+    "usernamehw.errorlens",
+    "svelte.svelte-vscode",
+    "bradlc.vscode-tailwindcss"
+  ],
   "[svelte]": {
     "editor.defaultFormatter": "svelte.svelte-vscode",
     "editor.formatOnSave": true
