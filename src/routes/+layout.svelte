@@ -59,8 +59,22 @@
     // Request the next animation frame
     requestAnimationFrame(bganim);
   };
-  let tl: gsap.core.Timeline
-  let mover: gsap.core.Tween
+  let tl: gsap.core.Timeline;
+  let mover: gsap.core.Timeline;
+  function pxToRem(px: number) {
+    return px / parseFloat(getComputedStyle(document.documentElement).fontSize);
+  }
+  const staggerText = async (e: HTMLSpanElement) => {
+    const t = e.innerText.split("");
+    e.innerHTML = "";
+    const divs = t.map((s)=>{
+      const d = document.createElement("div");
+      d.innerText = s;
+      e.appendChild(d);
+    });
+    gsap.set(e.querySelectorAll("div"), {display: "inline-block", opacity: 0, yPercent: -50})
+    await tick()
+  }
   onMount(() => {
     then = Date.now(); // Initialize 'then' with the current timestamp
     bganim();
@@ -75,17 +89,24 @@
     logo.addEventListener("mouseleave", (e) => fout(e.currentTarget));
     bganim();
     gsap.set("#cursor", { xPercent: -50, yPercent: -50 });
-    tl = gsap.timeline({defaults: {
-    ease: "power1.inOut",
-    duration: 0.1
-    },
-  });
-    tl.to("#menu div:nth-child(1)", {translateY: "0.75rem"});
-    tl.to("#menu div:nth-child(4)", {translateY: "-0.75rem"}, "<");
-    tl.to("#menu div:not(:nth-child(2))", {scaleX: 0});
-    tl.to("#menu div:nth-child(2)", {scale: menuOpen ? 12 : 8, duration: 0.3, ease: "power4.out"})
-    mover = gsap.to("#menu div:nth-child(2)", {scale: "+=4", duration: 0.2}).pause()
-    tl.pause();
+    gsap.set("#menu span", { yPercent: -50, xPercent: -50 });
+    tl = gsap.timeline({
+      defaults: {
+        ease: "power1.inOut",
+        duration: 0.2,
+      },
+      paused: true
+    });
+    tl.to("#t", { translateY: "0.75rem" });
+    tl.to("#b", { translateY: "-0.75rem" }, "<");
+    tl.to("#t, #b, #m", { scaleX: 0.1 });
+    let end = document.getElementById("menu")?.offsetHeight ?? 0;
+    let o = document.querySelector("#menu span") as HTMLSpanElement;
+    const s = pxToRem(end) / 0.25;
+    tl.to("#c", { scale: s, duration: 0.4, ease: "power4.out" });
+    staggerText(o).then(()=> {
+      tl.to("#menu span div", { opacity: 1, yPercent: 0, duration: 0.3, stagger: 0.05 }, "<+0.3");
+    })
   });
   const fin = (t: HTMLAnchorElement) => gsap.to(t, { fontWeight: 900 });
   const fout = (t: HTMLAnchorElement) => gsap.to(t, { fontWeight: 500 });
@@ -125,7 +146,7 @@
       });
       out = false;
       prev = true;
-    } else{
+    } else {
       gsap.to("#cursor", {
         ease: "power4.out",
         duration: 0.3,
@@ -139,7 +160,7 @@
 />
 <div
   id="cursor"
-  class="fixed pointer-events-none w-10 h-10 rounded-full bg-slate-900 border-[10%] border-slate-900"
+  class="fixed hidden md:block pointer-events-none w-10 h-10 rounded-full bg-slate-900 border-[10%] border-slate-900"
 />
 <header class="flex h-20 justify-between items-center md:px-10">
   <a class="font-medium p-2" bind:this={logo} href="#">Laxmanan</a>
@@ -164,22 +185,30 @@
 </nav>
 <button
   on:click={async (e) => {
-    if(!menuOpen) {tl.play() } else { await mover.reverse().then(); tl.reverse() }
-    menuOpen = !menuOpen
+    if (!menuOpen) {
+      tl.play();
+    } else {
+      tl.reverse();
+    }
+    menuOpen = !menuOpen;
   }}
-  on:mouseenter={(e)=>{
-    menuOpen && mover.play()
+  on:mouseenter={(e) => {
+    gsap.to("#txt", {fontWeight: 600, duration: 0.4, ease: "power1.out"});
   }}
-  on:mouseleave={(e)=>{
-    menuOpen && mover.reverse()
+  on:mouseleave={(e) => {
+    gsap.to("#txt", {fontWeight: 400, duration: 0.4, ease: "power1.out"});
   }}
   id="menu"
   class="fixed bottom-10 left-1/2 -translate-x-1/2 rounded-full bg-slate-900 flex flex-col gap-2 items-center p-6 justify-center min-w-max aspect-square"
 >
-  <div class="bg-white pointer-events-none w-10 h-1" />
-  <div class="fixed bg-white pointer-events-none w-1 z-50 h-1 rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2"/>
-  <div class="bg-white pointer-events-none w-10 h-1" />
-  <div class="bg-white pointer-events-none w-10 h-1" />
+  <div id="t" class="bg-white pointer-events-none w-10 h-1 rounded-full" />
+  <div
+    id="c"
+    class="absolute bg-white pointer-events-none w-1 h-1 rounded-full top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2"
+  />
+  <span id="txt" class="absolute overflow-y-hidden pointer-events-none z-50 top-1/2 left-1/2">Close</span>
+  <div id="m" class="bg-white pointer-events-none w-10 h-1 rounded-full" />
+  <div id="b" class="bg-white pointer-events-none w-10 h-1 rounded-full" />
 </button>
 
 <style lang="postcss">
