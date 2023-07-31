@@ -59,7 +59,8 @@
     // Request the next animation frame
     requestAnimationFrame(bganim);
   };
-
+  let tl: gsap.core.Timeline
+  let mover: gsap.core.Tween
   onMount(() => {
     then = Date.now(); // Initialize 'then' with the current timestamp
     bganim();
@@ -72,8 +73,19 @@
     logo.addEventListener("focusout", (e) => fout(e.currentTarget));
     logo.addEventListener("mouseenter", (e) => fin(e.currentTarget));
     logo.addEventListener("mouseleave", (e) => fout(e.currentTarget));
-    gsap.set("#cursor", { xPercent: -50, yPercent: -50 });
     bganim();
+    gsap.set("#cursor", { xPercent: -50, yPercent: -50 });
+    tl = gsap.timeline({defaults: {
+    ease: "power1.inOut",
+    duration: 0.1
+    },
+  });
+    tl.to("#menu div:nth-child(1)", {translateY: "0.75rem"});
+    tl.to("#menu div:nth-child(4)", {translateY: "-0.75rem"}, "<");
+    tl.to("#menu div:not(:nth-child(2))", {scaleX: 0});
+    tl.to("#menu div:nth-child(2)", {scale: menuOpen ? 12 : 8, duration: 0.3, ease: "power4.out"})
+    mover = gsap.to("#menu div:nth-child(2)", {scale: "+=4", duration: 0.2}).pause()
+    tl.pause();
   });
   const fin = (t: HTMLAnchorElement) => gsap.to(t, { fontWeight: 900 });
   const fout = (t: HTMLAnchorElement) => gsap.to(t, { fontWeight: 500 });
@@ -88,6 +100,8 @@
     { name: "About", href: "#" },
     { name: "Contact", href: "#" },
   ];
+  let menuOpen = false;
+  let prev = false;
 </script>
 
 <svelte:window
@@ -100,16 +114,18 @@
     });
   }}
   on:mouseover={(e) => {
-    if (e.target.closest(":is(button, a)") && out) {
+    const el = e.target.closest("button, a");
+    if (el && out && !prev) {
+      console.log(el);
       gsap.to("#cursor", {
         ease: "power4.out",
         duration: 0.3,
         backgroundColor: "transparent",
         scale: 3,
       });
-      console.log(e.clientY - e.target.offsetTop);
       out = false;
-    } else {
+      prev = true;
+    } else{
       gsap.to("#cursor", {
         ease: "power4.out",
         duration: 0.3,
@@ -117,6 +133,7 @@
         scale: 1,
       });
       out = true;
+      prev = false;
     }
   }}
 />
@@ -147,20 +164,22 @@
 </nav>
 <button
   on:click={async (e) => {
-    await gsap
-      .to("#menu div:nth-child(2)", { scaleX: 0, duration: 0.1 })
-      .then();
-    const s = Flip.getState("#menu div");
-    gsap.set("#menu div:nth-child(2)", { display: "none" });
-    await tick();
-    Flip.from(s, { duration: 0.2, ease: "power1.out" });
+    if(!menuOpen) {tl.play() } else { await mover.reverse().then(); tl.reverse() }
+    menuOpen = !menuOpen
+  }}
+  on:mouseenter={(e)=>{
+    menuOpen && mover.play()
+  }}
+  on:mouseleave={(e)=>{
+    menuOpen && mover.reverse()
   }}
   id="menu"
   class="fixed bottom-10 left-1/2 -translate-x-1/2 rounded-full bg-slate-900 flex flex-col gap-2 items-center p-6 justify-center min-w-max aspect-square"
 >
-  <div class="bg-white w-10 h-1" />
-  <div class="bg-white w-10 h-1" />
-  <div class="bg-white w-10 h-1" />
+  <div class="bg-white pointer-events-none w-10 h-1" />
+  <div class="fixed bg-white pointer-events-none w-1 z-50 h-1 rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2"/>
+  <div class="bg-white pointer-events-none w-10 h-1" />
+  <div class="bg-white pointer-events-none w-10 h-1" />
 </button>
 
 <style lang="postcss">
