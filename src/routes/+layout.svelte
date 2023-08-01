@@ -61,10 +61,12 @@
   };
   let tl: gsap.core.Timeline;
   let mover: gsap.core.Timeline;
+  let cursorMoved = false;
+  let cursor: HTMLDivElement;
   function pxToRem(px: number) {
     return px / parseFloat(getComputedStyle(document.documentElement).fontSize);
   }
-  const staggerText = async (e: HTMLSpanElement) => {
+  const staggerText = async (e: HTMLSpanElement | HTMLHeadingElement | HTMLAnchorElement) => {
     const t = e.innerText.split("");
     e.innerHTML = "";
     const divs = t.map((s)=>{
@@ -72,24 +74,28 @@
       d.innerText = s;
       e.appendChild(d);
     });
-    gsap.set(e.querySelectorAll("div"), {display: "inline-block", opacity: 0, yPercent: -50})
+    gsap.set(e.querySelectorAll("div"), {display: "inline-block", opacity: 0, yPercent: -50, willChange: "transform"})
     await tick()
   }
   onMount(() => {
-    then = Date.now(); // Initialize 'then' with the current timestamp
-    bganim();
+    then = Date.now();
+    // bganim();
     window
       .matchMedia("(prefers-color-scheme: dark)")
       .addEventListener("change", (e) => {
         e.matches ? (palette = "dark") : "light";
       });
+     // animate text "Laxmanan" which acts as logo
     logo.addEventListener("focusin", (e) => fin(e.currentTarget));
     logo.addEventListener("focusout", (e) => fout(e.currentTarget));
     logo.addEventListener("mouseenter", (e) => fin(e.currentTarget));
     logo.addEventListener("mouseleave", (e) => fout(e.currentTarget));
-    bganim();
-    gsap.set("#cursor", { xPercent: -50, yPercent: -50 });
+    
+    // Set styles using gsap as not to affect gsap animation
+    gsap.set(cursor, { xPercent: -50, yPercent: -50 });
     gsap.set("#menu span", { yPercent: -50, xPercent: -50 });
+    gsap.set("nav", {xPercent: -100, display: "flex"});
+    // Navigation menu timeline
     tl = gsap.timeline({
       defaults: {
         ease: "power1.inOut",
@@ -101,12 +107,19 @@
     tl.to("#b", { translateY: "-0.75rem" }, "<");
     tl.to("#t, #b, #m", { scaleX: 0.1 });
     let end = document.getElementById("menu")?.offsetHeight ?? 0;
-    let o = document.querySelector("#menu span") as HTMLSpanElement;
+    let menuCloseText = document.querySelector("#menu span") as HTMLSpanElement;
     const s = pxToRem(end) / 0.25;
     tl.to("#c", { scale: s, duration: 0.4, ease: "power4.out" });
-    staggerText(o).then(()=> {
+    staggerText(menuCloseText).then(()=> {
+      menuCloseText.classList.remove("hidden")
       tl.to("#menu span div", { opacity: 1, yPercent: 0, duration: 0.3, stagger: 0.05 }, "<+0.3");
     })
+    tl.to("nav", {xPercent: 0, duration: 1}, 0.2)
+    for(const li of (document.querySelectorAll("nav ul li a") as NodeListOf<HTMLAnchorElement>)) {
+      staggerText(li).then(()=>{
+        tl.to(li.getElementsByTagName("div"), {opacity: 1, yPercent: 0, duration: 0.3, stagger: 0.05}, "list")
+      })
+    }
   });
   const fin = (t: HTMLAnchorElement) => gsap.to(t, { fontWeight: 900 });
   const fout = (t: HTMLAnchorElement) => gsap.to(t, { fontWeight: 500 });
@@ -133,11 +146,11 @@
       translateX: `${e.clientX}px - 50%`,
       translateY: `${e.clientY}px - 50%`,
     });
+    if(!cursorMoved) cursor.style.display ="";
   }}
   on:mouseover={(e) => {
     const el = e.target.closest("button, a");
     if (el && out && !prev) {
-      console.log(el);
       gsap.to("#cursor", {
         ease: "power4.out",
         duration: 0.3,
@@ -160,7 +173,10 @@
 />
 <div
   id="cursor"
-  class="fixed hidden md:block pointer-events-none w-10 h-10 rounded-full bg-slate-900 border-[10%] border-slate-900"
+  bind:this={cursor}
+  style="display: none !important;"
+  class="fixed md:block pointer-events-none w-10 h-10 rounded-full bg-slate-900 border-[10%] border-slate-900"
+
 />
 <header class="flex h-20 justify-between items-center md:px-10">
   <a class="font-medium p-2" bind:this={logo} href="#">Laxmanan</a>
@@ -176,10 +192,10 @@
   </button>
 </header>
 <slot />
-<nav class="hidden">
-  <ul class="flex gap-2">
+<nav style="display: none;" class="fixed left-0 top-0 w-screen h-screen flex items-center bg-slate-900">
+  <ul class="flex flex-col justify-between h-1/2 text-white font-black text-6xl md:text-9xl uppercase">
     {#each menu as { href, name }}
-      <li><a {href}>{name}</a></li>
+      <li><a class="relative block overflow-hidden" {href}>{name}</a></li>
     {/each}
   </ul>
 </nav>
@@ -206,14 +222,14 @@
     id="c"
     class="absolute bg-white pointer-events-none w-1 h-1 rounded-full top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2"
   />
-  <span id="txt" class="absolute overflow-y-hidden pointer-events-none z-50 top-1/2 left-1/2">Close</span>
+  <span id="txt" class="absolute hidden overflow-y-hidden pointer-events-none z-50 top-1/2 left-1/2">Close</span>
   <div id="m" class="bg-white pointer-events-none w-10 h-1 rounded-full" />
   <div id="b" class="bg-white pointer-events-none w-10 h-1 rounded-full" />
 </button>
 
 <style lang="postcss">
   :global(html) {
-    @apply text-slate-900 dark:text-white;
+    @apply text-slate-900 dark:text-white overflow-x-hidden;
     background-color: hsla(0, 100%, 50%, 1);
     --v1n: 0;
     --v2n: 0;

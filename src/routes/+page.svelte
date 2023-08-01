@@ -30,7 +30,7 @@
 </script>
 
 <section class="md:p-20 flex flex-col gap-20">
-  <h1 bind:this={h1} class="text-4xl md:text-9xl uppercase font-black">
+  <h1 bind:this={h1} class="text-5xl md:text-9xl uppercase font-black">
     <span class="block overflow-hidden relative">Laxmanan</span>
     <span class="block overflow-hidden relative">Krishnapillai</span>
   </h1>
