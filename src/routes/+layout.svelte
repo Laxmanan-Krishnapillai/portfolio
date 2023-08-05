@@ -1,6 +1,6 @@
 <script lang="ts">
   import "../app.css";
-  import { gsap } from "gsap/dist/gsap";
+  import { gsap } from "gsap";
   import { Flip } from "gsap/dist/Flip";
   import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
   import { Observer } from "gsap/dist/Observer";
@@ -115,11 +115,11 @@
       tl.to("#menu span div", { opacity: 1, yPercent: 0, duration: 0.3, stagger: 0.05 }, "<+0.3");
     })
     tl.to("nav", {xPercent: 0, duration: 1}, 0.2)
-    for(const li of (document.querySelectorAll("nav ul li a") as NodeListOf<HTMLAnchorElement>)) {
-      staggerText(li).then(()=>{
-        tl.to(li.getElementsByTagName("div"), {opacity: 1, yPercent: 0, duration: 0.3, stagger: 0.05}, "list")
-      })
-    }
+    // for(const li of (document.querySelectorAll("nav ul li a") as NodeListOf<HTMLAnchorElement>)) {
+    //   staggerText(li).then(()=>{
+    //     tl.to(li.getElementsByTagName("div"), {opacity: 1, yPercent: 0, duration: 0.3, stagger: 0.05}, "list")
+    //   })
+    // }
   });
   const fin = (t: HTMLAnchorElement) => gsap.to(t, { fontWeight: 900 });
   const fout = (t: HTMLAnchorElement) => gsap.to(t, { fontWeight: 500 });
@@ -163,7 +163,7 @@
       gsap.to("#cursor", {
         ease: "power4.out",
         duration: 0.3,
-        backgroundColor: "rgb(15 23 42)",
+        backgroundColor: menuOpen ? "white" : "rgb(15 23 42)",
         scale: 1,
       });
       out = true;
@@ -175,7 +175,7 @@
   id="cursor"
   bind:this={cursor}
   style="display: none !important;"
-  class="fixed md:block pointer-events-none w-10 h-10 rounded-full bg-slate-900 border-[10%] border-slate-900"
+  class="fixed hidden md:block z-50 pointer-events-none w-10 h-10 rounded-full border-[10%] {!menuOpen ? "bg-white border-white" : "bg-slate-900 border-slate-900" }"
 
 />
 <header class="flex h-20 justify-between items-center md:px-10">
@@ -192,10 +192,10 @@
   </button>
 </header>
 <slot />
-<nav style="display: none;" class="fixed left-0 top-0 w-screen h-screen flex items-center bg-slate-900">
-  <ul class="flex flex-col justify-between h-1/2 text-white font-black text-6xl md:text-9xl uppercase">
+<nav style="display: none;" class="fixed left-0 top-0 w-screen px-4 h-screen md:px-20 flex items-center bg-slate-900">
+  <ul class="flex flex-col justify-between text-white gap-10 text-8xl md:text-[12rem] uppercase">
     {#each menu as { href, name }}
-      <li><a class="relative block overflow-hidden" {href}>{name}</a></li>
+      <li><a class="relative block overflow-hidden" data-title={name} {href}><span class="inline-block">{name}</span></a></li>
     {/each}
   </ul>
 </nav>

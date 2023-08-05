@@ -4,3 +4,22 @@
 html {
   font-family: "Chillax", sans-serif;
 }
+a[data-title] {
+  font-family: 'Anton', serif;
+}
+a[data-title]::after {
+  content: attr(data-title);
+  position: absolute;
+  left: 0;
+  transform: translateY(110%)
+}
+a[data-title]:hover::after {
+  transform: translateY(0);
+}
+a[data-title]:hover span {
+  transform: translateY(-125%);
+}
+a[data-title] span, a[data-title]::after {
+  transition: transform 1.05s cubic-bezier(.3,.86,.36,.95);
+  will-change: transform;
+}
